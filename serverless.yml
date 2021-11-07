@@ -33,13 +33,13 @@ provider:
 
 # Instancia funções a serem utilizadas
 functions:
-  hello:
-    handler: src/functions/hello.handle
+  generateCertificate:
+    handler: src/functions/generateCertificate.handle
     # Cria uma rota de acesso HTTP
     events:
       - http:
-          path: /hello
-          method: GET
+          path: /generateCertificate
+          method: POST
           cors: true
 
 resources:
