@@ -1,0 +1,29 @@
+# Cria o nome do serviço
+service:
+  name: ignitecertificate
+
+# Declara plugins a serem utilizados
+plugins:
+  - serverless-offline
+  - serverless-webpack
+
+# Configurações customizadas
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+# Nome do provedor a ser usado
+provider:
+  name: aws
+
+# Instancia funções a serem utilizadas
+functions:
+  hello:
+    handler: src/functions/hello.handle
+    # Cria uma rota de acesso HTTP
+    events:
+      - http:
+          path: /hello
+          method: GET
+          cors: true
