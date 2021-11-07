@@ -16,6 +16,8 @@ custom:
 # Nome do provedor a ser usado
 provider:
   name: aws
+  runtime: nodejs14.x
+  region: sa-east-1
 
 # Instancia funções a serem utilizadas
 functions:
