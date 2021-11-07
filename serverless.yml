@@ -41,6 +41,14 @@ functions:
           path: /generateCertificate
           method: POST
           cors: true
+  verifyCertificate:
+    handler: src/functions/verifyCertificate.handle
+    # Cria uma rota de acesso HTTP
+    events:
+      - http:
+          path: /verifyCertificate/{id}
+          method: GET
+          cors: true
 
 resources:
   # Define recursos na AWS
