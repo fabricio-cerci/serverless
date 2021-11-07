@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 import handlebars from "handlebars";
 import path from "path";
 import fs from "fs";
-import { S3 } from 'aws-sdk';
+import { S3 } from "aws-sdk";
+import { APIGatewayProxyHandler } from "aws-lambda";
 
 interface ICreateCertificate {
   id: string;
@@ -33,20 +34,34 @@ const compile = async function (data: ITemplate) {
   return handlebars.compile(html)(data);
 };
 
-export const handle = async (event) => {
+export const handle: APIGatewayProxyHandler = async (event) => {
   // id, name, grade
   const { id, name, grade } = JSON.parse(event.body) as ICreateCertificate;
 
-  await document
-    .put({
+  const response = await document
+    .query({
       TableName: "users_certificates",
-      Item: {
-        id,
-        name,
-        grade,
+      KeyConditionExpression: "id = :id",
+      ExpressionAttributeValues: {
+        ":id": id,
       },
     })
     .promise();
+
+  const usersAlreadyExists = response.Items[0];
+
+  if (!usersAlreadyExists) {
+    await document
+      .put({
+        TableName: "users_certificates",
+        Item: {
+          id,
+          name,
+          grade,
+        },
+      })
+      .promise();
+  }
 
   const medalPath = path.join(process.cwd(), "src", "templates", "selo.png");
   const medal = fs.readFileSync(medalPath, "base64");
@@ -89,19 +104,21 @@ export const handle = async (event) => {
 
   const s3 = new S3();
 
-  await s3.putObject({
-    Bucket: 'api-rentx-fxc',
-    Key: `${id}.pdf`,
-    ACL: 'public-read',
-    Body: pdf,
-    ContentType: 'application/pdf'
-  }).promise();
+  await s3
+    .putObject({
+      Bucket: "api-rentx-fxc",
+      Key: `${id}.pdf`,
+      ACL: "public-read",
+      Body: pdf,
+      ContentType: "application/pdf",
+    })
+    .promise();
 
   return {
     statusCode: 201,
     body: JSON.stringify({
       message: "Certificate created!",
-      url: `https://api-rentx-fxc.s3.sa-east-1.amazonaws.com/${id}.pdf`
+      url: `https://api-rentx-fxc.s3.sa-east-1.amazonaws.com/${id}.pdf`,
     }),
     headers: {
       "Content-type": "application/json",
