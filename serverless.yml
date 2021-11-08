@@ -8,6 +8,10 @@ plugins:
   - serverless-webpack
   - serverless-dynamodb-local
 
+#Se quiser empacotamento individual
+# package:
+## individually: true
+
 # Configurações customizadas
 custom:
   webpack:
@@ -24,12 +28,23 @@ custom:
       inMemory: true
       # Cria a tabela sozinha se não existir
       migrate: true
+  bucket: api-rentx-fxc
 
 # Nome do provedor a ser usado
 provider:
   name: aws
+  #memorySize: 256
   runtime: nodejs14.x
   region: sa-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
 
 # Instancia funções a serem utilizadas
 functions:
@@ -41,6 +56,12 @@ functions:
           path: /generateCertificate
           method: POST
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:PutItem
+        Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
   verifyCertificate:
     handler: src/functions/verifyCertificate.handle
     # Cria uma rota de acesso HTTP
@@ -49,6 +70,11 @@ functions:
           path: /verifyCertificate/{id}
           method: GET
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
 
 resources:
   # Define recursos na AWS
